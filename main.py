@@ -1,5 +1,4 @@
 import pyautogui
-import msvcrt
 import os
 
 CWD = os.getcwd()
@@ -7,10 +6,11 @@ IMAGES_PATH = 'images'
 IMAGE_COOKIE = os.path.join(CWD, IMAGES_PATH, 'Cookie.png')
 print(IMAGE_COOKIE)
 
+pyautogui.PAUSE = 0.01
+
 while True:
-    isCookie = pyautogui.screenshot(IMAGE_COOKIE)
+    cookie_location = pyautogui.locateOnScreen(IMAGE_COOKIE, confidence=0.5)
 
-    print(isCookie)
-
-    if msvcrt.kbhit():
-        break
+    if cookie_location != None:
+        pyautogui.moveTo(cookie_location)
+        pyautogui.click()
