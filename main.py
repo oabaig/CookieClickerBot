@@ -7,12 +7,21 @@ IMAGE_COOKIE = os.path.join(CWD, IMAGES_PATH, 'Cookie.png')
 IMAGE_CURSOR = os.path.join(CWD, IMAGES_PATH, 'Cursor.png')
 GREYED_RGB = tuple((117,128,127))
 
+class StoreItem:
+    pass
 
-def init():
-    pyautogui.PAUSE = 0.1   
+class Cookie:
+    def __init__():
+        pass
+
+def Init():
+    pyautogui.PAUSE = 0.1
+
+def Clicker():
+    pass   
 
 if __name__ == '__main__':
-    init()
+    Init()
 
     while True:
         click_location = pyautogui.locateOnScreen(IMAGE_CURSOR, confidence=0.8)
