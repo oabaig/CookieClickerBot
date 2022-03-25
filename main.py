@@ -18,14 +18,14 @@ class StoreItem:
         self.image_width, self.image_height = image.size
         pixels = image.getpixel((self.image_width / 2, self.image_height / 2))
         self.average_pixel_value = self.__CalculateAveragePixelValue__(pixels)
-        self.image_coordinates = self.LocateImage()
+        self.image_coordinates = self.__LocateImage__()
         
         image.close()
 
     def __CalculateAveragePixelValue__(self, p):
         return (p[0] + p[1] + p[2]) / 3
 
-    def LocateImage(self):
+    def __LocateImage__(self):
         return pyautogui.locateOnScreen(self.image_path, confidence=0.9)
 
     def Clickable(self):
@@ -45,7 +45,7 @@ class StoreItem:
             
             return False
         
-        self.image_coordinates = self.LocateImage()
+        self.image_coordinates = self.__LocateImage__()
         print(f'try to find image {self.name} {self.image_coordinates}')
         return False
 
