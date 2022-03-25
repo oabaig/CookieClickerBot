@@ -1,5 +1,6 @@
 from PIL import Image
 import pyautogui
+import asyncio
 import json
 import os
 
@@ -15,29 +16,42 @@ class StoreItem:
         self.image_path = os.path.join(CWD, IMAGES_PATH, STOREITEMS_PATH, image_fname)
         image = Image.open(self.image_path)
         self.image_width, self.image_height = image.size
-        self.average_pixel_value = self.__CalculateAveragePixelValue__(image)
+        pixels = image.getpixel((self.image_width / 2, self.image_height / 2))
+        self.average_pixel_value = self.__CalculateAveragePixelValue__(pixels)
         self.image_coordinates = self.LocateImage()
         
         image.close()
 
-    def __CalculateAveragePixelValue__(self, image):
-
-        size = image.size()
-
-        pixel_values = image.getpixel((size[0] / 2, size[1] / 2))
-        return (pixel_values[0] + pixel_values[1] +pixel_values[2]) / 3
+    def __CalculateAveragePixelValue__(self, p):
+        return (p[0] + p[1] + p[2]) / 3
 
     def LocateImage(self):
         return pyautogui.locateOnScreen(self.image_path, confidence=0.9)
 
-    def Click(self):
-
+    def Clickable(self):
         if self.image_coordinates:
-            pyautogui.moveTo(self.image_coordinates)
-            pyautogui.click()
-        else:
-            self.image_coordinates = self.LocateImage()
+            box = self.image_coordinates
+            pixels = pyautogui.pixel(
+                int(int(box.left) + int(box.width) / 2), 
+                int(int(box.top) + int(box.height) / 2)
+            )
+            avg_pixels = self.__CalculateAveragePixelValue__(pixels)
 
+            print(f'{self.average_pixel_value} {avg_pixels}')
+
+            if not (avg_pixels < self.average_pixel_value):
+                print(f'clicked {self.name} {self.average_pixel_value} {avg_pixels}')
+                return True
+            
+            return False
+        
+        self.image_coordinates = self.LocateImage()
+        print(f'try to find image {self.name} {self.image_coordinates}')
+        return False
+
+    def Click(self):
+        pyautogui.moveTo(self.image_coordinates)
+        pyautogui.click()
 
     def Print(self):
         print(f'name: {self.name} \t | \t average pixel value: {self.average_pixel_value}')
@@ -63,7 +77,7 @@ class Cookie:
 
 
 def Init():
-    pyautogui.PAUSE = 0.1
+    pyautogui.PAUSE = 0.01
 
     items_json = ParseJSON('StoreItems.json')
 
@@ -82,37 +96,21 @@ def ParseJSON(fname):
     file_contents = json.load(file)
     return file_contents
 
+async def CheckItemAvailable(items: list):
+        
+    for item in reversed(items):
+        if item.Clickable():
+            return item
+
+    return None
+
 if __name__ == '__main__':
     items = Init()
 
-    #cookie = Cookie(IMAGE_COOKIE)
-
-    # while True:
-
-    #     cursor_pos = pyautogui.position()
-
-    #     print(f'brightness of cursor position: {pyautogui.pixel(cursor_pos.x, cursor_pos.y)}')
-
-    #     # click_location = pyautogui.locateOnScreen(IMAGE_CURSOR, confidence = 0.99)
-    #     # if click_location:
-    #     #     print('found cursor')
-    #     # else:
-    #     #     print('failed to find cursor')
-
-    # while True:
-    #     click_location = pyautogui.locateOnScreen(IMAGE_CURSOR, confidence=0.8)
-    #     pos = pyautogui.position()
-    #     print(pyautogui.pixel(pos.x, pos.y))
-    #     if click_location != None :
-    #         if not pyautogui.pixelMatchesColor(int(pos.x), int(pos.y), GREYED_RGB, tolerance=0):
-    #             # pyautogui.moveTo(click_location)
-    #             # pyautogui.click()
-    #             print('clickable - not greyed')
-    #             continue
-
-    #     click_location = pyautogui.locateOnScreen(IMAGE_COOKIE, confidence=0.7)
-    #     print(click_location)
-
-    #     # if click_location != None:
-    #     #     # pyautogui.moveTo(click_location)
-    #     #     # pyautogui.click()
+    cookie = Cookie(os.path.join(CWD, IMAGES_PATH, 'Cookie.png'))
+    while True:
+        item = asyncio.run(CheckItemAvailable(items))   
+        if item:
+            item.Click()
+        else:
+            cookie.Click()
