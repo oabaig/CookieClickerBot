@@ -1,4 +1,3 @@
-from tkinter import image_names
 from PIL import Image
 import pyautogui
 import json
@@ -7,23 +6,41 @@ import os
 CWD = os.getcwd()
 IMAGES_PATH = 'images'
 STOREITEMS_PATH = 'StoreItems'
-IMAGE_COOKIE = os.path.join(CWD, IMAGES_PATH, 'Cookie.png')
 
 class StoreItem:
     
     def __init__(self, name, image_fname):
 
         self.name = name
-        self.image_fname = image_fname
+        self.image_path = os.path.join(CWD, IMAGES_PATH, STOREITEMS_PATH, image_fname)
+        image = Image.open(self.image_path)
+        self.image_width, self.image_height = image.size
+        self.average_pixel_value = self.__CalculateAveragePixelValue__(image)
+        self.image_coordinates = self.LocateImage()
+        
+        image.close()
 
-        self.__CalculateAveragePixelValue__()
+    def __CalculateAveragePixelValue__(self, image):
 
-    def __CalculateAveragePixelValue__(self):
-        image_path = os.path.join(CWD, IMAGES_PATH, STOREITEMS_PATH, self.image_fname)
-        im = Image.open(image_path)
+        size = image.size()
 
-        pixel_values = im.getpixel((32,32))
-        print(pixel_values)
+        pixel_values = image.getpixel((size[0] / 2, size[1] / 2))
+        return (pixel_values[0] + pixel_values[1] +pixel_values[2]) / 3
+
+    def LocateImage(self):
+        return pyautogui.locateOnScreen(self.image_path, confidence=0.9)
+
+    def Click(self):
+
+        if self.image_coordinates:
+            pyautogui.moveTo(self.image_coordinates)
+            pyautogui.click()
+        else:
+            self.image_coordinates = self.LocateImage()
+
+
+    def Print(self):
+        print(f'name: {self.name} \t | \t average pixel value: {self.average_pixel_value}')
 
 class Cookie:
 
@@ -48,11 +65,17 @@ class Cookie:
 def Init():
     pyautogui.PAUSE = 0.1
 
-    x = ParseJSON('StoreItems.json')
+    items_json = ParseJSON('StoreItems.json')
 
-    keys = x.keys()
+    keys = items_json.keys()
     keys = list(keys)
-    newItem = StoreItem(x[keys[0]]["ItemName"], x[keys[0]]["FileName"])
+
+    items = list()
+    for key in keys:
+        newItem = StoreItem(items_json[key]["ItemName"], items_json[key]["FileName"])
+        items.append(newItem)
+
+    return items
 
 def ParseJSON(fname):
     file = open(fname, 'r')
@@ -60,7 +83,7 @@ def ParseJSON(fname):
     return file_contents
 
 if __name__ == '__main__':
-    Init()
+    items = Init()
 
     #cookie = Cookie(IMAGE_COOKIE)
 
