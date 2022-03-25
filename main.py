@@ -1,12 +1,14 @@
+import asyncio
+from multiprocessing import Process
 from PIL import Image
 import pyautogui
-import asyncio
 import json
 import os
 
 CWD = os.getcwd()
 IMAGES_PATH = 'images'
 STOREITEMS_PATH = 'StoreItems'
+
 
 class StoreItem:
     
@@ -26,6 +28,7 @@ class StoreItem:
         return (p[0] + p[1] + p[2]) / 3
 
     def __LocateImage__(self):
+        # can speedup by giving region to locate
         return pyautogui.locateOnScreen(self.image_path, confidence=0.9)
 
     def Clickable(self):
@@ -75,42 +78,77 @@ class Cookie:
         pyautogui.moveTo(self.cookie_location)
         pyautogui.click()
 
-
 def Init():
     pyautogui.PAUSE = 0.01
-
-    items_json = ParseJSON('StoreItems.json')
-
-    keys = items_json.keys()
-    keys = list(keys)
-
-    items = list()
-    for key in keys:
-        newItem = StoreItem(items_json[key]["ItemName"], items_json[key]["FileName"])
-        items.append(newItem)
-
-    return items
 
 def ParseJSON(fname):
     file = open(fname, 'r')
     file_contents = json.load(file)
     return file_contents
 
-async def CheckItemAvailable(items: list):
-        
-    for item in reversed(items):
-        if item.Clickable():
-            return item
+def InitializeItems(fname):
+    items_json = ParseJSON(fname)
+
+    keys = items_json.keys()
+    keys = list(keys)
+
+    store_items = list()
+    upgrades = list()
+    for key in items_json[keys[0]]:
+        upgrade = StoreItem(items_json[keys[0]][key]["ItemName"], items_json[keys[0]][key]["FileName"])
+        store_items.append(upgrade)
+    
+    for key in items_json[keys[1]]:
+        upgrade = StoreItem(items_json[keys[1]][key]["ItemName"], items_json[keys[1]][key]["FileName"])
+        upgrades.append(upgrade)
+
+    return store_items, upgrades
+
+async def CheckUpgrades(upgrades: list):
+    for upgrade in upgrades:
+            if upgrade.Clickable():
+                upgrades.remove(upgrade)
+                return upgrade
 
     return None
 
+async def CheckStore(store_items: list):
+    for item in reversed(store_items):
+            if item.Clickable():
+                return item
+
+    return None
+
+async def CheckItemAvailable(store_items: list, upgrades: list):
+    
+    upgrade = await CheckUpgrades(upgrades)
+    if upgrade:
+        return upgrade
+
+    item = await CheckStore(store_items)
+    if item:
+        return item
+    
+    return None
+
+
 if __name__ == '__main__':
-    items = Init()
+    Init()
+    store_items, upgrades = InitializeItems('StoreItems.json')
+
 
     cookie = Cookie(os.path.join(CWD, IMAGES_PATH, 'Cookie.png'))
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    item = loop.run_until_complete(CheckItemAvailable(store_items, upgrades))
+
     while True:
-        item = asyncio.run(CheckItemAvailable(items))   
         if item:
             item.Click()
+
+            print('here')
+            asyncio.set_event_loop(loop)
+            item = loop.run_until_complete(CheckItemAvailable(store_items, upgrades))
         else:
             cookie.Click()

@@ -1,10 +1,30 @@
 {
-	"Cursor": {
-		"ItemName": "Cursor",
-		"FileName": "Cursor.png"
+	"StoreItems": {
+		"Cursor": {
+			"ItemName": "Cursor",
+			"FileName": "Cursor.png"
+		},
+		"Grandma": {
+			"ItemName": "Grandma",
+			"FileName": "Grandma.png"
+		},
+		"Farm": {
+			"ItemName": "Farm",
+			"FileName": "Farm.png"
+		}
 	},
-	"Grandma": {
-		"ItemName": "Grandma",
-		"FileName": "Grandma.png"
+	"Upgrades": {
+		"Reinforced_Index_Finger": {
+			"ItemName": "Reinforced Index Finger",
+			"FileName": "Reinforced_Index_Finger.png"
+		},
+		"Carpal_Tunnel_Prevention_Cream": {
+			"ItemName": "Carpal Tunnel Prevention Cream",
+			"FileName": "Carpal_Tunnel_Prevention_Cream.png"
+		},
+		"Steel_Plated_Rolling_Rolling_Pins": {
+			"ItemName": "Steel-Plated Rolling Pins",
+			"FileName": "Steel-Plated_Rolling_Pins.png"
+		}
 	}
 }
